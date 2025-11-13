@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Upload, Grid, List, Filter, Download, Eye, Share2, Save, Box } from 'lucide-react';
+import { Search, Upload, Grid, List, Filter, Download, Eye, Share2, Save, Box, Sparkles, Zap, Moon, Sun } from 'lucide-react';
 
 const App = () => {
   const [view, setView] = useState('home');
@@ -7,6 +7,7 @@ const App = () => {
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const categories = [
     { name: 'Fasteners', count: 15420, icon: '🔩' },
@@ -26,80 +27,173 @@ const App = () => {
     { id: 6, name: 'Proximity Sensor', category: 'Sensors', standard: 'IEC 60947', material: 'Plastic Housing', dimensions: 'M12 x 50mm', confidence: 90, image: '📡', downloads: 567 }
   ];
 
+  // Option 5: Slate + Green Theme
+  const colors = {
+    dark: {
+      bg: '#0f172a',           // Deep slate
+      card: '#1e293b',         // Slate
+      accent: '#10b981',       // Green
+      text: '#ffffff',         // White
+      textMuted: '#94a3b8'     // Gray
+    },
+    light: {
+      bg: '#f1f5f9',           // Light slate
+      card: '#ffffff',         // White
+      accent: '#10b981',       // Green
+      text: '#0f172a',         // Dark slate
+      textMuted: '#64748b'     // Gray
+    }
+  };
+
+  const theme = isDarkMode ? colors.dark : colors.light;
+
   const renderHome = () => {
     return (
-      <div className="space-y-8">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-12 text-white">
-          <h1 className="text-5xl font-bold mb-4">MechLibrary</h1>
-          <p className="text-xl mb-8 opacity-90">Your intelligent mechanical component library with AI-powered 3D conversion</p>
-          
-          <div className="flex gap-3 max-w-3xl">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search components..."
-                className="w-full pl-12 pr-4 py-4 rounded-xl text-gray-900 text-lg focus:outline-none focus:ring-4 focus:ring-blue-300"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+      <div className="space-y-12">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-3xl" style={{ backgroundColor: theme.card }}>
+          <div className="relative p-16">
+            <div className="flex items-center gap-3 mb-6">
+              <Sparkles style={{ color: theme.accent }} size={32} />
+              <span className="px-4 py-1 rounded-full text-sm font-semibold" style={{ 
+                backgroundColor: `${theme.accent}20`, 
+                color: theme.accent,
+                border: `1px solid ${theme.accent}40`
+              }}>
+                AI-Powered Platform
+              </span>
             </div>
-            <button 
-              onClick={() => setView('search')}
-              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-4 rounded-xl font-semibold transition-all transform hover:scale-105"
-            >
-              Search
-            </button>
-            <button 
-              onClick={() => setView('upload')}
-              className="bg-white hover:bg-gray-100 text-gray-900 px-6 py-4 rounded-xl font-semibold flex items-center gap-2 transition-all"
-            >
-              <Upload size={20} />
-              Upload
-            </button>
+            
+            <h1 className="text-6xl font-bold mb-4 tracking-tight" style={{ color: theme.text }}>
+              MechLibrary
+            </h1>
+            <p className="text-2xl mb-8 max-w-3xl leading-relaxed" style={{ color: theme.textMuted }}>
+              Intelligent mechanical component library with AI-powered 3D conversion
+            </p>
+            
+            <div className="flex gap-4 max-w-4xl flex-wrap">
+              <div className="flex-1 min-w-80 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2" style={{ color: theme.accent }} size={22} />
+                <input
+                  type="text"
+                  placeholder="Search components, parts, or standards..."
+                  className="w-full pl-14 pr-4 py-5 rounded-xl text-lg focus:outline-none focus:ring-2 transition-all"
+                  style={{ 
+                    backgroundColor: theme.bg,
+                    color: theme.text,
+                    border: `2px solid ${theme.card}`,
+                    borderColor: theme.accent + '40'
+                  }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={(e) => e.target.style.borderColor = theme.accent}
+                  onBlur={(e) => e.target.style.borderColor = theme.accent + '40'}
+                />
+              </div>
+              <button 
+                onClick={() => setView('search')}
+                className="px-10 py-5 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
+                style={{ backgroundColor: theme.accent, color: '#ffffff' }}
+              >
+                Search
+              </button>
+              <button 
+                onClick={() => setView('upload')}
+                className="px-8 py-5 rounded-xl font-bold text-lg flex items-center gap-3 transition-all shadow-lg"
+                style={{ 
+                  backgroundColor: theme.bg,
+                  color: theme.text,
+                  border: `2px solid ${theme.accent}`
+                }}
+              >
+                <Upload size={22} />
+                Upload
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Categories */}
         <div>
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Browse by Category</h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold" style={{ color: theme.text }}>Browse Categories</h2>
+            <span className="text-sm" style={{ color: theme.textMuted }}>50,000+ components</span>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categories.map((cat, idx) => (
               <button
                 key={idx}
                 onClick={() => setView('search')}
-                className="bg-white p-6 rounded-xl border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all text-center group"
+                className="p-8 rounded-2xl border-2 transition-all text-center transform hover:-translate-y-2 hover:shadow-2xl"
+                style={{ 
+                  backgroundColor: theme.card,
+                  borderColor: theme.card,
+                  color: theme.text
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = theme.accent;
+                  e.currentTarget.style.backgroundColor = isDarkMode ? '#334155' : '#e2e8f0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = theme.card;
+                  e.currentTarget.style.backgroundColor = theme.card;
+                }}
               >
-                <div className="text-4xl mb-3 transform group-hover:scale-110 transition-transform">{cat.icon}</div>
-                <div className="font-semibold text-gray-800">{cat.name}</div>
-                <div className="text-sm text-gray-500 mt-1">{cat.count.toLocaleString()}</div>
+                <div className="text-5xl mb-4 transform transition-transform duration-300 hover:scale-125">{cat.icon}</div>
+                <div className="font-bold text-lg mb-2">{cat.name}</div>
+                <div style={{ color: theme.textMuted }} className="text-sm">{cat.count.toLocaleString()}</div>
               </button>
             ))}
           </div>
         </div>
 
+        {/* Features */}
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl">
-            <div className="bg-blue-500 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-              <Search className="text-white" size={28} />
+          {[
+            { icon: Search, title: 'Smart Search', desc: 'Advanced AI-powered search with natural language processing' },
+            { icon: Box, title: 'AI 3D Conversion', desc: 'Convert 2D drawings to accurate 3D models' },
+            { icon: Download, title: 'Multi-Format Export', desc: 'Export to all major CAD formats' }
+          ].map((feature, idx) => (
+            <div
+              key={idx}
+              className="p-8 rounded-2xl border-2 transition-all transform hover:-translate-y-2 hover:shadow-2xl"
+              style={{ 
+                backgroundColor: theme.card,
+                borderColor: theme.card
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = theme.accent;
+                e.currentTarget.style.backgroundColor = isDarkMode ? '#334155' : '#e2e8f0';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = theme.card;
+                e.currentTarget.style.backgroundColor = theme.card;
+              }}
+            >
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" 
+                style={{ backgroundColor: theme.accent + '20' }}>
+                <feature.icon style={{ color: theme.accent }} size={32} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4" style={{ color: theme.text }}>{feature.title}</h3>
+              <p style={{ color: theme.textMuted }}>{feature.desc}</p>
             </div>
-            <h3 className="text-xl font-bold mb-3 text-gray-800">Smart Search</h3>
-            <p className="text-gray-600">Find any mechanical component with intelligent filters</p>
-          </div>
-          
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-2xl">
-            <div className="bg-purple-500 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-              <Box className="text-white" size={28} />
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-gray-800">AI 3D Conversion</h3>
-            <p className="text-gray-600">Convert 2D images to accurate 3D models</p>
-          </div>
-          
-          <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl">
-            <div className="bg-green-500 w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-              <Download className="text-white" size={28} />
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-gray-800">Multi-Format Export</h3>
-            <p className="text-gray-600">Download in DXF, STEP, STL, and all major CAD formats</p>
+          ))}
+        </div>
+
+        {/* Stats */}
+        <div className="rounded-2xl p-8 border-2" style={{ backgroundColor: theme.card, borderColor: theme.card }}>
+          <div className="grid grid-cols-4 gap-8 text-center">
+            {[
+              { value: '50K+', label: 'Components' },
+              { value: '98%', label: 'AI Accuracy' },
+              { value: '10+', label: 'CAD Formats' },
+              { value: '24/7', label: 'Available' }
+            ].map((stat, idx) => (
+              <div key={idx} className="transform hover:scale-110 transition-all cursor-pointer">
+                <div className="text-4xl font-bold mb-2" style={{ color: theme.accent }}>{stat.value}</div>
+                <div style={{ color: theme.textMuted }}>{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -111,32 +205,52 @@ const App = () => {
       <div className="space-y-6">
         <div className="flex gap-4 items-center flex-wrap">
           <div className="flex-1 relative min-w-64">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2" style={{ color: theme.accent }} size={20} />
             <input
               type="text"
               placeholder="Search components..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 transition-all"
+              style={{ 
+                backgroundColor: theme.card,
+                color: theme.text,
+                borderColor: theme.card
+              }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={(e) => e.target.style.borderColor = theme.accent}
+              onBlur={(e) => e.target.style.borderColor = theme.card}
             />
           </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-6 py-3 rounded-xl flex items-center gap-2 font-semibold transition-all ${showFilters ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            className="px-6 py-3 rounded-xl flex items-center gap-2 font-semibold transition-all"
+            style={{ 
+              backgroundColor: showFilters ? theme.accent : theme.card,
+              color: showFilters ? '#ffffff' : theme.text,
+              border: `2px solid ${showFilters ? theme.accent : theme.card}`
+            }}
           >
             <Filter size={20} />
             Filters
           </button>
-          <div className="flex gap-2 bg-gray-200 rounded-xl p-1">
+          <div className="flex gap-2 rounded-xl p-1 border-2" style={{ backgroundColor: theme.card, borderColor: theme.card }}>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow' : 'hover:bg-gray-300'}`}
+              className="p-2 rounded-lg transition-all"
+              style={{ 
+                backgroundColor: viewMode === 'grid' ? theme.accent : 'transparent',
+                color: viewMode === 'grid' ? '#ffffff' : theme.textMuted
+              }}
             >
               <Grid size={20} />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow' : 'hover:bg-gray-300'}`}
+              className="p-2 rounded-lg transition-all"
+              style={{ 
+                backgroundColor: viewMode === 'list' ? theme.accent : 'transparent',
+                color: viewMode === 'list' ? '#ffffff' : theme.textMuted
+              }}
             >
               <List size={20} />
             </button>
@@ -144,40 +258,13 @@ const App = () => {
         </div>
 
         {showFilters && (
-          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+          <div className="rounded-2xl p-6 border-2" style={{ backgroundColor: theme.card, borderColor: theme.card }}>
             <div className="grid md:grid-cols-4 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-                <select className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none">
+                <label className="block text-sm font-semibold mb-2" style={{ color: theme.textMuted }}>Category</label>
+                <select className="w-full px-4 py-2 rounded-lg border-2 focus:outline-none" 
+                  style={{ backgroundColor: theme.bg, color: theme.text, borderColor: theme.card }}>
                   <option>All Categories</option>
-                  <option>Fasteners</option>
-                  <option>Bearings</option>
-                  <option>Gears</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Standard</label>
-                <select className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none">
-                  <option>Any Standard</option>
-                  <option>ISO</option>
-                  <option>DIN</option>
-                  <option>ANSI</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Material</label>
-                <select className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none">
-                  <option>Any Material</option>
-                  <option>Steel</option>
-                  <option>Aluminum</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Confidence</label>
-                <select className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none">
-                  <option>Any</option>
-                  <option>90%+</option>
-                  <option>95%+</option>
                 </select>
               </div>
             </div>
@@ -189,24 +276,34 @@ const App = () => {
             <div
               key={comp.id}
               onClick={() => setSelectedComponent(comp)}
-              className="bg-white rounded-xl border-2 border-gray-200 hover:border-blue-500 hover:shadow-xl transition-all cursor-pointer group"
+              className="rounded-2xl border-2 cursor-pointer overflow-hidden transform hover:-translate-y-2 hover:shadow-2xl transition-all"
+              style={{ backgroundColor: theme.card, borderColor: theme.card }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = theme.accent}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = theme.card}
             >
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-48 rounded-t-xl flex items-center justify-center text-7xl">
+              <div className="h-48 flex items-center justify-center text-7xl border-b-2" 
+                style={{ backgroundColor: theme.bg, borderColor: theme.card }}>
                 {comp.image}
               </div>
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600">{comp.name}</h3>
-                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">{comp.confidence}%</span>
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="font-bold text-xl" style={{ color: theme.text }}>{comp.name}</h3>
+                  <div className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold" 
+                    style={{ backgroundColor: theme.accent + '20', color: theme.accent, border: `1px solid ${theme.accent}50` }}>
+                    <Zap size={12} />
+                    {comp.confidence}%
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">{comp.category}</p>
+                <p className="text-sm mb-4" style={{ color: theme.textMuted }}>{comp.category}</p>
                 <div className="flex gap-2">
-                  <button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition-all font-semibold">
+                  <button className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 font-semibold shadow-lg transition-all"
+                    style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
                     <Eye size={16} />
                     View 3D
                   </button>
-                  <button className="bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition-all">
-                    <Save size={18} />
+                  <button className="p-2.5 rounded-lg border-2 transition-all" 
+                    style={{ backgroundColor: theme.bg, borderColor: theme.card }}>
+                    <Save size={18} style={{ color: theme.textMuted }} />
                   </button>
                 </div>
               </div>
@@ -221,55 +318,21 @@ const App = () => {
     return (
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-3 text-gray-800">Upload & Convert to 3D</h2>
-          <p className="text-gray-600">Upload technical drawings or component photos</p>
+          <h2 className="text-4xl font-bold mb-4" style={{ color: theme.text }}>Upload & Convert to 3D</h2>
+          <p className="text-lg" style={{ color: theme.textMuted }}>Upload drawings for instant conversion</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border-4 border-dashed border-blue-300 p-16 text-center hover:border-blue-500 transition-all cursor-pointer">
-          <Upload className="mx-auto mb-6 text-blue-500" size={64} />
-          <h3 className="text-2xl font-bold mb-3 text-gray-800">Drop your images here</h3>
-          <p className="text-gray-600 mb-6">or click to browse files</p>
-          <p className="text-sm text-gray-500">Supported: JPG, PNG, PDF, DXF</p>
+        <div className="rounded-3xl border-4 border-dashed p-20 text-center transition-all cursor-pointer hover:shadow-xl"
+          style={{ backgroundColor: theme.card, borderColor: theme.card }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = theme.accent}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = theme.card}>
+          <Upload className="mx-auto mb-6" style={{ color: theme.accent }} size={64} />
+          <h3 className="text-3xl font-bold mb-4" style={{ color: theme.text }}>Drop files here</h3>
+          <p className="text-lg" style={{ color: theme.textMuted }}>or click to browse</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
-            <h3 className="font-bold text-lg mb-4 text-gray-800">Conversion Settings</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Component Type</label>
-                <select className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none">
-                  <option>Auto-detect</option>
-                  <option>Fastener</option>
-                  <option>Bearing</option>
-                  <option>Gear</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Quality Level</label>
-                <select className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none">
-                  <option>Standard</option>
-                  <option>High</option>
-                  <option>Premium</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
-            <h3 className="font-bold text-lg mb-4 text-gray-800">Export Formats</h3>
-            <div className="space-y-3">
-              {['STL', 'DXF', 'STEP', 'Solidworks', 'Fusion 360'].map((format, idx) => (
-                <label key={idx} className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" defaultChecked={idx < 3} className="w-5 h-5" />
-                  <span className="text-gray-700">{format}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-xl font-bold text-lg transition-all">
+        <button className="w-full py-5 rounded-xl font-bold text-xl shadow-xl transition-all hover:scale-105"
+          style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
           Start Conversion
         </button>
       </div>
@@ -283,65 +346,34 @@ const App = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         <button 
           onClick={() => setSelectedComponent(null)}
-          className="text-blue-600 hover:text-blue-700 font-semibold"
+          className="font-semibold transition-colors"
+          style={{ color: theme.accent }}
         >
-          ← Back to search
+          ← Back
         </button>
 
         <div className="grid md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl h-96 flex items-center justify-center border-2 border-gray-300">
-              <div className="text-center">
-                <div className="text-8xl mb-4">{selectedComponent.image}</div>
-                <p className="text-gray-600 font-semibold">Interactive 3D Viewer</p>
-              </div>
+          <div className="rounded-3xl h-96 flex items-center justify-center border-2"
+            style={{ backgroundColor: theme.card, borderColor: theme.card }}>
+            <div className="text-center">
+              <div className="text-9xl mb-4">{selectedComponent.image}</div>
+              <p className="font-semibold" style={{ color: theme.textMuted }}>3D Viewer</p>
             </div>
           </div>
 
           <div className="space-y-6">
             <div>
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-800 mb-2">{selectedComponent.name}</h1>
-                  <p className="text-gray-600">{selectedComponent.category}</p>
-                </div>
-                <span className="bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm font-bold">
-                  {selectedComponent.confidence}%
-                </span>
-              </div>
+              <h1 className="text-4xl font-bold mb-3" style={{ color: theme.text }}>{selectedComponent.name}</h1>
+              <p className="text-lg" style={{ color: theme.textMuted }}>{selectedComponent.category}</p>
+            </div>
 
-              <div className="bg-blue-50 rounded-xl p-4 mb-6">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600 mb-1">Standard</p>
-                    <p className="font-semibold text-gray-800">{selectedComponent.standard}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600 mb-1">Material</p>
-                    <p className="font-semibold text-gray-800">{selectedComponent.material}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
-                <h3 className="font-bold text-lg mb-4 text-gray-800">Export Options</h3>
-                <div className="space-y-3 mb-6">
-                  <select className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none">
-                    <option>STL - 3D Printing</option>
-                    <option>DXF - CAD</option>
-                    <option>STEP - Universal</option>
-                  </select>
-                </div>
-                <div className="flex gap-3">
-                  <button className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
-                    <Download size={20} />
-                    Download
-                  </button>
-                  <button className="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl">
-                    <Save size={20} />
-                  </button>
-                </div>
-              </div>
+            <div className="rounded-2xl p-6 border-2" style={{ backgroundColor: theme.card, borderColor: theme.card }}>
+              <h3 className="font-bold text-xl mb-6" style={{ color: theme.text }}>Export</h3>
+              <button className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all"
+                style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
+                <Download size={20} />
+                Download
+              </button>
             </div>
           </div>
         </div>
@@ -350,36 +382,49 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b-2 border-gray-200 sticky top-0 z-50">
+    <div className="min-h-screen" style={{ backgroundColor: theme.bg }}>
+      <nav className="sticky top-0 z-50 backdrop-blur-sm border-b" 
+        style={{ backgroundColor: theme.bg + 'cc', borderColor: theme.card }}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <button 
               onClick={() => { setView('home'); setSelectedComponent(null); }}
-              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+              className="text-2xl font-bold transition-all"
+              style={{ color: theme.accent }}
             >
               MechLibrary
             </button>
             <div className="flex items-center gap-6">
               <button 
                 onClick={() => setView('home')}
-                className={`font-semibold ${view === 'home' && !selectedComponent ? 'text-blue-600' : 'text-gray-600'}`}
+                className="font-semibold transition-colors"
+                style={{ color: view === 'home' && !selectedComponent ? theme.accent : theme.textMuted }}
               >
                 Home
               </button>
               <button 
                 onClick={() => setView('search')}
-                className={`font-semibold ${view === 'search' && !selectedComponent ? 'text-blue-600' : 'text-gray-600'}`}
+                className="font-semibold transition-colors"
+                style={{ color: view === 'search' && !selectedComponent ? theme.accent : theme.textMuted }}
               >
                 Browse
               </button>
               <button 
                 onClick={() => setView('upload')}
-                className={`font-semibold ${view === 'upload' ? 'text-blue-600' : 'text-gray-600'}`}
+                className="font-semibold transition-colors"
+                style={{ color: view === 'upload' ? theme.accent : theme.textMuted }}
               >
                 Upload
               </button>
-              <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold">
+              <button 
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-2 rounded-lg border-2 transition-all hover:scale-110"
+                style={{ backgroundColor: theme.card, borderColor: theme.card }}
+              >
+                {isDarkMode ? <Sun size={20} style={{ color: theme.accent }} /> : <Moon size={20} style={{ color: theme.accent }} />}
+              </button>
+              <button className="px-6 py-2 rounded-lg font-semibold shadow-lg transition-all"
+                style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
                 Sign In
               </button>
             </div>
