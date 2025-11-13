@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Upload, Grid, List, Filter, Download, Eye, Save, Box, Sparkles, Zap, Moon, Sun, X } from 'lucide-react';
+import { Search, Upload, Grid, List, Filter, Download, Eye, Save, Box, Sparkles, Zap, Moon, Sun, X, Share2, CheckSquare, Square } from 'lucide-react';
 
 const App = () => {
   const [view, setView] = useState('home');
@@ -25,6 +25,14 @@ const App = () => {
   const [componentType, setComponentType] = useState('Auto-detect');
   const [qualityLevel, setQualityLevel] = useState('High');
   const [selectedFormats, setSelectedFormats] = useState(['STL', 'DXF', 'STEP']);
+  
+  // Pagination
+  const [componentsPerPage] = useState(6);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Comparison
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareList, setCompareList] = useState([]);
 
   const categories = [
     { name: 'Fasteners', count: 15420, icon: '🔩' },
@@ -94,6 +102,15 @@ const App = () => {
     return filtered;
   }, [searchQuery, selectedCategory, selectedStandard, selectedMaterial, selectedConfidence, sortBy]);
 
+  // Paginated components
+  const paginatedComponents = useMemo(() => {
+    const startIndex = (currentPage - 1) * componentsPerPage;
+    const endIndex = startIndex + componentsPerPage;
+    return filteredComponents.slice(startIndex, endIndex);
+  }, [filteredComponents, currentPage, componentsPerPage]);
+
+  const totalPages = Math.ceil(filteredComponents.length / componentsPerPage);
+
   const standards = ['Any Standard', ...new Set(allComponents.map(c => c.standard.split(' ')[0]))];
   const materials = ['Any Material', ...new Set(allComponents.map(c => c.material))];
 
@@ -103,11 +120,50 @@ const App = () => {
     setSelectedStandard('Any Standard');
     setSelectedMaterial('Any Material');
     setSelectedConfidence('Any');
+    setCurrentPage(1);
   };
 
   const hasActiveFilters = searchQuery || selectedCategory !== 'All Categories' || 
     selectedStandard !== 'Any Standard' || selectedMaterial !== 'Any Material' || 
     selectedConfidence !== 'Any';
+
+  // Share component
+  const shareComponent = (comp) => {
+    const shareUrl = `${window.location.origin}?component=${comp.id}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: comp.name,
+        text: `Check out this component: ${comp.name}`,
+        url: shareUrl
+      }).catch(() => {
+        copyToClipboard(shareUrl);
+      });
+    } else {
+      copyToClipboard(shareUrl);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Link copied to clipboard!');
+    }).catch(() => {
+      alert(`Copy this link: ${text}`);
+    });
+  };
+
+  // Toggle compare
+  const toggleCompare = (compId) => {
+    if (compareList.includes(compId)) {
+      setCompareList(compareList.filter(id => id !== compId));
+    } else {
+      if (compareList.length < 4) {
+        setCompareList([...compareList, compId]);
+      } else {
+        alert('You can compare up to 4 components at a time');
+      }
+    }
+  };
 
   const colors = {
     dark: {
@@ -774,6 +830,8 @@ const App = () => {
   const renderComponent = () => {
     if (!selectedComponent) return null;
     
+    const isSaved = savedComponents.includes(selectedComponent.id);
+    
     return (
       <div className="max-w-6xl mx-auto space-y-6">
         <button 
@@ -795,19 +853,313 @@ const App = () => {
 
           <div className="space-y-6">
             <div>
-              <h1 className="text-4xl font-bold mb-3" style={{ color: theme.text }}>{selectedComponent.name}</h1>
-              <p className="text-lg" style={{ color: theme.textMuted }}>{selectedComponent.category}</p>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold mb-3" style={{ color: theme.text }}>{selectedComponent.name}</h1>
+                  <p className="text-lg mb-2" style={{ color: theme.textMuted }}>{selectedComponent.category}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    if (isSaved) {
+                      setSavedComponents(savedComponents.filter(id => id !== selectedComponent.id));
+                    } else {
+                      setSavedComponents([...savedComponents, selectedComponent.id]);
+                    }
+                  }}
+                  className="p-3 rounded-xl border-2 transition-all hover:scale-110"
+                  style={{ 
+                    backgroundColor: isSaved ? theme.accent + '20' : theme.card,
+                    borderColor: isSaved ? theme.accent : theme.card
+                  }}
+                >
+                  <Save 
+                    size={24} 
+                    style={{ color: isSaved ? theme.accent : theme.textMuted }}
+                    fill={isSaved ? theme.accent : 'none'}
+                  />
+                </button>
+              </div>
+              
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-3 py-1 rounded-lg text-sm font-bold" 
+                  style={{ backgroundColor: theme.accent + '20', color: theme.accent }}>
+                  <Zap size={14} className="inline mr-1" />
+                  {selectedComponent.confidence}% AI Confidence
+                </span>
+                <span className="px-3 py-1 rounded-lg text-sm font-bold" 
+                  style={{ backgroundColor: theme.bg, color: theme.text }}>
+                  ⭐ {selectedComponent.rating}
+                </span>
+                <span className="px-3 py-1 rounded-lg text-sm font-bold" 
+                  style={{ backgroundColor: theme.bg, color: theme.textMuted }}>
+                  📥 {selectedComponent.downloads.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl p-6 border-2" style={{ backgroundColor: theme.bg, borderColor: theme.card }}>
+              <h3 className="font-bold text-lg mb-4" style={{ color: theme.text }}>Specifications</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm mb-1" style={{ color: theme.textMuted }}>Standard</p>
+                  <p className="font-semibold" style={{ color: theme.text }}>{selectedComponent.standard}</p>
+                </div>
+                <div>
+                  <p className="text-sm mb-1" style={{ color: theme.textMuted }}>Material</p>
+                  <p className="font-semibold" style={{ color: theme.text }}>{selectedComponent.material}</p>
+                </div>
+                <div>
+                  <p className="text-sm mb-1" style={{ color: theme.textMuted }}>Dimensions</p>
+                  <p className="font-semibold" style={{ color: theme.text }}>{selectedComponent.dimensions}</p>
+                </div>
+                <div>
+                  <p className="text-sm mb-1" style={{ color: theme.textMuted }}>Category</p>
+                  <p className="font-semibold" style={{ color: theme.text }}>{selectedComponent.category}</p>
+                </div>
+              </div>
             </div>
 
             <div className="rounded-2xl p-6 border-2" style={{ backgroundColor: theme.card, borderColor: theme.card }}>
-              <h3 className="font-bold text-xl mb-6" style={{ color: theme.text }}>Export</h3>
-              <button className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all"
-                style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
+              <h3 className="font-bold text-xl mb-6" style={{ color: theme.text }}>Export Options</h3>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {['STL', 'DXF', 'STEP', 'IGES'].map(format => (
+                  <button
+                    key={format}
+                    onClick={() => alert(`Downloading ${selectedComponent.name}.${format.toLowerCase()}...`)}
+                    className="flex items-center justify-between p-3 rounded-lg border-2 transition-all hover:shadow-lg"
+                    style={{ backgroundColor: theme.bg, borderColor: theme.card, color: theme.text }}
+                  >
+                    <span className="font-semibold">{format}</span>
+                    <Download size={18} style={{ color: theme.accent }} />
+                  </button>
+                ))}
+              </div>
+              <button 
+                onClick={() => alert('Downloaded all formats!')}
+                className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all"
+                style={{ backgroundColor: theme.accent, color: '#ffffff' }}
+              >
                 <Download size={20} />
-                Download
+                Download All Formats
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderWorkspace = () => {
+    const savedComponentsData = allComponents.filter(comp => savedComponents.includes(comp.id));
+    
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: theme.text }}>My Workspace</h1>
+          <p className="text-lg" style={{ color: theme.textMuted }}>
+            {savedComponents.length === 0 ? 'No saved components yet' : 
+             `${savedComponents.length} saved component${savedComponents.length > 1 ? 's' : ''}`}
+          </p>
+        </div>
+
+        {savedComponents.length === 0 ? (
+          <div className="text-center py-20 rounded-2xl" style={{ backgroundColor: theme.card }}>
+            <div className="text-8xl mb-6">💾</div>
+            <h3 className="text-2xl font-bold mb-4" style={{ color: theme.text }}>No saved components yet</h3>
+            <p className="text-lg mb-8" style={{ color: theme.textMuted }}>
+              Start browsing and click the save icon on components you like
+            </p>
+            <button
+              onClick={() => setView('search')}
+              className="px-8 py-4 rounded-xl font-bold text-lg transition-all"
+              style={{ backgroundColor: theme.accent, color: '#ffffff' }}
+            >
+              Browse Components
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center">
+              <p style={{ color: theme.textMuted }}>
+                Your saved components
+              </p>
+              <button
+                onClick={() => {
+                  if (window.confirm('Remove all saved components?')) {
+                    setSavedComponents([]);
+                  }
+                }}
+                className="px-4 py-2 rounded-lg font-semibold transition-all"
+                style={{ backgroundColor: theme.card, color: theme.textMuted }}
+              >
+                Clear All
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {savedComponentsData.map((comp) => (
+                <div
+                  key={comp.id}
+                  onClick={() => setSelectedComponent(comp)}
+                  className="rounded-2xl border-2 cursor-pointer overflow-hidden transform hover:-translate-y-2 hover:shadow-2xl transition-all"
+                  style={{ backgroundColor: theme.card, borderColor: theme.card }}
+                >
+                  <div className="h-48 flex items-center justify-center text-7xl border-b-2" 
+                    style={{ backgroundColor: theme.bg, borderColor: theme.card }}>
+                    {comp.image}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className="font-bold text-xl" style={{ color: theme.text }}>{comp.name}</h3>
+                      <div className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold" 
+                        style={{ backgroundColor: theme.accent + '20', color: theme.accent }}>
+                        <Zap size={12} />
+                        {comp.confidence}%
+                      </div>
+                    </div>
+                    <p className="text-sm mb-4" style={{ color: theme.textMuted }}>{comp.category}</p>
+                    <div className="flex gap-2">
+                      <button 
+                        className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 font-semibold shadow-lg transition-all"
+                        style={{ backgroundColor: theme.accent, color: '#ffffff' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedComponent(comp);
+                        }}
+                      >
+                        <Eye size={16} />
+                        View
+                      </button>
+                      <button 
+                        className="p-2.5 rounded-lg border-2 transition-all" 
+                        style={{ backgroundColor: theme.bg, borderColor: theme.accent }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSavedComponents(savedComponents.filter(id => id !== comp.id));
+                        }}
+                      >
+                        <X size={18} style={{ color: theme.accent }} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const renderCompare = () => {
+    const compareData = allComponents.filter(comp => compareList.includes(comp.id));
+    
+    if (compareData.length === 0) {
+      return (
+        <div className="text-center py-20 rounded-2xl" style={{ backgroundColor: theme.card }}>
+          <div className="text-8xl mb-6">📊</div>
+          <h3 className="text-2xl font-bold mb-4" style={{ color: theme.text }}>No components selected</h3>
+          <p className="text-lg mb-8" style={{ color: theme.textMuted }}>
+            Go to Browse and select components to compare
+          </p>
+          <button
+            onClick={() => {
+              setView('search');
+              setCompareMode(true);
+            }}
+            className="px-8 py-4 rounded-xl font-bold text-lg transition-all"
+            style={{ backgroundColor: theme.accent, color: '#ffffff' }}
+          >
+            Browse Components
+          </button>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold mb-2" style={{ color: theme.text }}>Component Comparison</h1>
+            <p className="text-lg" style={{ color: theme.textMuted }}>
+              Comparing {compareData.length} component{compareData.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setView('search');
+              setCompareMode(true);
+            }}
+            className="px-6 py-3 rounded-xl font-semibold transition-all"
+            style={{ backgroundColor: theme.card, color: theme.text }}
+          >
+            ← Back to Browse
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full rounded-2xl overflow-hidden" style={{ backgroundColor: theme.card }}>
+            <thead>
+              <tr style={{ backgroundColor: theme.bg }}>
+                <th className="p-4 text-left font-bold" style={{ color: theme.text }}>Property</th>
+                {compareData.map(comp => (
+                  <th key={comp.id} className="p-4 text-center" style={{ color: theme.text }}>
+                    <div className="text-6xl mb-2">{comp.image}</div>
+                    <div className="font-bold text-lg mb-1">{comp.name}</div>
+                    <button
+                      onClick={() => setCompareList(compareList.filter(id => id !== comp.id))}
+                      className="text-xs px-3 py-1 rounded-lg transition-all"
+                      style={{ backgroundColor: theme.card, color: theme.textMuted }}
+                    >
+                      Remove
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { label: 'Category', key: 'category' },
+                { label: 'Standard', key: 'standard' },
+                { label: 'Material', key: 'material' },
+                { label: 'Dimensions', key: 'dimensions' },
+                { label: 'AI Confidence', key: 'confidence', suffix: '%' },
+                { label: 'Rating', key: 'rating', prefix: '⭐ ' },
+                { label: 'Downloads', key: 'downloads', format: true }
+              ].map((row, idx) => (
+                <tr key={idx} style={{ borderTop: '1px solid ' + theme.bg }}>
+                  <td className="p-4 font-semibold" style={{ color: theme.textMuted }}>{row.label}</td>
+                  {compareData.map(comp => (
+                    <td key={comp.id} className="p-4 text-center" style={{ color: theme.text }}>
+                      {row.prefix || ''}
+                      {row.format ? comp[row.key].toLocaleString() : comp[row.key]}
+                      {row.suffix || ''}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={() => {
+              setCompareList([]);
+              setView('search');
+            }}
+            className="px-6 py-3 rounded-xl font-semibold transition-all"
+            style={{ backgroundColor: theme.card, color: theme.text }}
+          >
+            Clear Comparison
+          </button>
+          <button
+            onClick={() => setView('search')}
+            className="px-6 py-3 rounded-xl font-semibold transition-all"
+            style={{ backgroundColor: theme.accent, color: '#ffffff' }}
+          >
+            Add More Components
+          </button>
         </div>
       </div>
     );
@@ -828,7 +1180,12 @@ const App = () => {
             </button>
             <div className="flex items-center gap-6">
               <button 
-                onClick={() => setView('home')}
+                onClick={() => {
+                  setView('home');
+                  setSelectedComponent(null);
+                  setSelectedCategory('All Categories');
+                  setSearchQuery('');
+                }}
                 className="font-semibold transition-colors"
                 style={{ color: view === 'home' && !selectedComponent ? theme.accent : theme.textMuted }}
               >
@@ -877,7 +1234,12 @@ const App = () => {
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {selectedComponent ? renderComponent() : view === 'home' ? renderHome() : view === 'search' ? renderSearch() : renderUpload()}
+        {selectedComponent ? renderComponent() : 
+         view === 'home' ? renderHome() : 
+         view === 'search' ? renderSearch() : 
+         view === 'upload' ? renderUpload() : 
+         view === 'compare' ? renderCompare() :
+         renderWorkspace()}
       </main>
     </div>
   );
